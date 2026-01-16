@@ -61,7 +61,7 @@ export function Header() {
                     <UserIcon className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#1a1625] border-white/10 text-white">
+                <DropdownMenuContent align="end" className="bg-popover border-border text-popover-foreground">
                   <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem className="hover:bg-white/5 cursor-pointer" onClick={() => signOut()}>
