@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+server/node_modules
+
+# Environment Variables (Security)
+.env
+.env.local
+.DS_Store
+
+# Build Output
+dist
+server/uploads/*
+server/outputs/*
+logs/*
+
+# Keep folders
+!server/uploads/.gitkeep
+!server/outputs/.gitkeep
+!logs/.gitkeep

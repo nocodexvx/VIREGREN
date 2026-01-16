@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  variagen-app:
+    container_name: variagen
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persistent storage for uploads and outputs
+      - ./server/uploads:/app/server/uploads
+      - ./server/outputs:/app/server/outputs
+      # Persist env file if needed, or set env vars here
+    env_file:
+      - .env
+    environment:
+      # Override any specific env vars for Docker if different from .env call
+      - PORT=3000
+      - NODE_ENV=production
