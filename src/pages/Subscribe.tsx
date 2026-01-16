@@ -75,7 +75,7 @@ export default function SubscribePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white overflow-y-auto">
+        <div className="min-h-screen bg-background text-foreground overflow-y-auto">
             <header className="p-4 flex justify-between items-center max-w-7xl mx-auto w-full">
                 <span className="font-bold text-xl">VariaGen</span>
                 <div className="flex items-center gap-4">
