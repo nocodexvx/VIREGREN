@@ -53,9 +53,9 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <Button size="lg" className="gradient-primary text-lg h-14 px-8 glow-primary" asChild>
-              <Link to="/register">
+              <Link to="/subscribe">
                 <Play className="w-5 h-5 mr-2" />
-                Criar Conta Agora
+                Começar Agora
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-lg h-14 px-8" asChild>

@@ -61,6 +61,10 @@ export default function SubscribePage() {
     }, [subscriptionStatus, navigate]);
 
     const handleSubscribe = (plan: typeof plans[0]) => {
+        if (!user) {
+            navigate('/register');
+            return;
+        }
         const price = isYearly ? plan.price.yearly : plan.price.monthly;
         const planId = `${plan.id}_${isYearly ? 'yearly' : 'monthly'}`;
 

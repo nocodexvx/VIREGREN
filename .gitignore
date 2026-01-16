@@ -17,3 +17,4 @@ logs/*
 !server/uploads/.gitkeep
 !server/outputs/.gitkeep
 !logs/.gitkeep
+VideoBatcher_Setup.exe
