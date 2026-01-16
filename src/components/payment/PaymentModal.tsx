@@ -6,7 +6,10 @@ import { Copy, Check, Loader2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/services/apiClient';
+import { supabase } from '@/lib/supabase';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -17,31 +20,57 @@ interface PaymentModalProps {
 
 export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps) {
     const { user, checkSubscription } = useAuth();
-    const [step, setStep] = useState<'cpf' | 'pix'>('cpf');
+    const [step, setStep] = useState<'details' | 'pix'>('details');
     const [loading, setLoading] = useState(false);
+
+    // Form states
     const [cpf, setCpf] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
     const [pixCode, setPixCode] = useState('');
     const [copied, setCopied] = useState(false);
 
-    const handleCreatePix = async (e: React.FormEvent) => {
+    const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) {
-            toast.error('Você precisa estar logado para assinar.');
-            return;
-        }
         setLoading(true);
 
         try {
+            let userId = user?.id;
+            let userEmail = user?.email || email;
+            let userName = user?.user_metadata?.full_name || name;
+
+            // 1. If not logged in, create account first
+            if (!user) {
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: name } }
+                });
+
+                if (authError) throw authError;
+
+                if (authData.user) {
+                    userId = authData.user.id;
+                    // Auto-signin is usually handled by Supabase client if session is returned
+                    // but we ensure we have the ID to proceed with payment immediately
+                }
+            }
+
+            if (!userId) throw new Error('Falha ao identificar usuário.');
+
+            // 2. Create Subscription & PIX
             const data = await apiFetch('/api/payments/subscribe', {
                 method: 'POST',
                 body: JSON.stringify({
-                    userId: user.id,
+                    userId,
                     plan,
                     customer: {
-                        name: user.email?.split('@')[0] || 'Cliente', // Fallback name
-                        email: user.email,
-                        cpf: cpf.replace(/\D/g, ''), // Clean CPF
-                        phone: '11999999999' // Fixed valid placeholder (11 digits)
+                        name: userName,
+                        email: userEmail,
+                        cpf: cpf.replace(/\D/g, ''),
+                        phone: '11999999999'
                     }
                 })
             });
@@ -50,11 +79,11 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
             setStep('pix');
             toast.success('PIX gerado com sucesso!');
 
-            // Start polling for subscription status
+            // Start polling (will pick up the session change too)
             checkSubscription();
 
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message || 'Erro ao processar.');
         } finally {
             setLoading(false);
         }
@@ -83,10 +112,48 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
                     </DialogDescription>
                 </DialogHeader>
 
-                {step === 'cpf' ? (
-                    <form onSubmit={handleCreatePix} className="space-y-4">
+                {step === 'details' ? (
+                    <form onSubmit={handlePayment} className="space-y-4">
+                        {!user && (
+                            <>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Nome Completo</label>
+                                    <Input
+                                        placeholder="Seu Nome"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="bg-secondary border-border"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Email</label>
+                                    <Input
+                                        type="email"
+                                        placeholder="seu@email.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="bg-secondary border-border"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Senha</label>
+                                    <Input
+                                        type="password"
+                                        placeholder="Crie uma senha"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="bg-secondary border-border"
+                                        required
+                                        minLength={6}
+                                    />
+                                </div>
+                            </>
+                        )}
+
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Digite seu CPF para a Nota Fiscal</label>
+                            <label className="text-sm font-medium">CPF (para Nota Fiscal)</label>
                             <Input
                                 placeholder="000.000.000-00"
                                 value={cpf}
@@ -95,8 +162,9 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
                                 required
                             />
                         </div>
+
                         <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-                            {loading ? <Loader2 className="animate-spin mr-2" /> : 'Gerar PIX para Pagamento'}
+                            {loading ? <Loader2 className="animate-spin mr-2" /> : (user ? 'Gerar PIX' : 'Criar Conta e Gerar PIX')}
                         </Button>
                     </form>
                 ) : (
