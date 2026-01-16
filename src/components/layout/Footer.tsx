@@ -14,41 +14,40 @@ export function Footer() {
               <span className="font-bold text-xl">VariaGen</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Generate unique video variations to scale your content across all platforms.
+              Gere variações únicas de vídeo para escalar seu conteúdo em todas as plataformas.
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Product</h4>
+            <h4 className="font-semibold mb-4">Produto</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-              <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
+              <li><a href="#features" className="hover:text-foreground transition-colors">Recursos</a></li>
+              <li><a href="#pricing" className="hover:text-foreground transition-colors">Preços</a></li>
               <li><Link to="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
               <li><a href="#faq" className="hover:text-foreground transition-colors">FAQ</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">Suporte</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Status</a></li>
+              <li><a href="mailto:suporte@variagen.com.br" className="hover:text-foreground transition-colors">Fale Conosco</a></li>
+              <li><a href="#" className="hover:text-foreground transition-colors">Status do Sistema</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Refund Policy</a></li>
+              <li><Link to="/legal/privacy" className="hover:text-foreground transition-colors">Política de Privacidade</Link></li>
+              <li><Link to="/legal/terms" className="hover:text-foreground transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/legal/refund" className="hover:text-foreground transition-colors">Política de Reembolso</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} VariaGen. All rights reserved.
+          © {new Date().getFullYear()} VariaGen. Todos os direitos reservados.
         </div>
       </div>
     </footer>

@@ -18,6 +18,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SubscribePage from "./pages/Subscribe";
 
+import Privacy from "./pages/legal/Privacy";
+import Terms from "./pages/legal/Terms";
+import Refund from "./pages/legal/Refund";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -33,6 +37,11 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/subscribe" element={<SubscribePage />} />
+
+            {/* Legal Routes */}
+            <Route path="/legal/privacy" element={<Privacy />} />
+            <Route path="/legal/terms" element={<Terms />} />
+            <Route path="/legal/refund" element={<Refund />} />
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
