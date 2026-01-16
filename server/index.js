@@ -159,10 +159,26 @@ import paymentRoutes from './routes/payments.js';
 app.use('/api/payments', paymentRoutes);
 
 // ============================================
-// FIX: JSON 404 Handling (Prevent HTML response)
+// SERVING FRONTEND (PRODUCTION)
 // ============================================
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found', path: req.originalUrl });
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from the React app
+// Assumes 'dist' is one level up from 'server' folder (in root)
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
+
+// Handle React Routing, return all requests to React app
+app.get('*', (req, res) => {
+  // Check if it's an API request first to avoid HTML response
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Endpoint not found', path: req.originalUrl });
+  }
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
