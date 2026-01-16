@@ -1,5 +1,4 @@
-version: '3.8'
-
+# Docker Compose for VariaGen (Updated for Hostinger)
 services:
   variagen-app:
     container_name: variagen
