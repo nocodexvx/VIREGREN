@@ -1,13 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-// As chaves devem estar no .env.local do Vite
-// VITE_SUPABASE_URL e VITE_SUPABASE_KEY
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-    console.error('⚠️  Supabase credenciais não encontradas. Verifique o .env');
+// Define window interface for runtime injection
+declare global {
+    interface Window {
+        _env_: {
+            VITE_SUPABASE_URL: string;
+            VITE_SUPABASE_KEY: string;
+        }
+    }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Runtime config (Hostinger) OR Build config (Local)
+const supabaseUrl = window._env_?.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = window._env_?.VITE_SUPABASE_KEY || import.meta.env.VITE_SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('⚠️  Supabase credenciais não encontradas. Verifique o .env ou injeção runtime.');
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '');

@@ -172,13 +172,34 @@ const __dirname = path.dirname(__filename);
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
 
+import fs from 'fs';
+
 // Handle React Routing, return all requests to React app
 app.get('*', (req, res) => {
   // Check if it's an API request first to avoid HTML response
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Endpoint not found', path: req.originalUrl });
   }
-  res.sendFile(path.join(distPath, 'index.html'));
+
+  const indexPath = path.join(distPath, 'index.html');
+
+  // Inject Runtime Environment Variables
+  fs.readFile(indexPath, 'utf8', (err, htmlData) => {
+    if (err) {
+      console.error('Error reading index.html', err);
+      return res.status(500).send('Error loading frontend');
+    }
+
+    const envPayload = {
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+      VITE_SUPABASE_KEY: process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_KEY
+    };
+
+    const injectedScript = `<script>window._env_ = ${JSON.stringify(envPayload)}</script>`;
+    const finalHtml = htmlData.replace('</head>', `${injectedScript}</head>`);
+
+    res.send(finalHtml);
+  });
 });
 
 app.listen(PORT, () => {
