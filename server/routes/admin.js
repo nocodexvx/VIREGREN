@@ -133,4 +133,34 @@ router.post('/users/:id/ban', requireAdmin, async (req, res) => {
     }
 });
 
+// DELETE USER
+router.delete('/users/:id', requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Delete from Supabase Auth (This is the master record)
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+
+        if (authError) {
+            console.error("Auth Delete Error:", authError);
+            return res.status(400).json({ error: 'Falha ao excluir usuário do Auth.' });
+        }
+
+        // 2. Delete from Public Table (If cascade not set up, though usually it is. We do it to be safe)
+        const { error: dbError } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id);
+
+        if (dbError) {
+            console.warn("DB Delete Warning (might have cascaded already):", dbError);
+        }
+
+        res.json({ message: 'Usuário excluído permanentemente.' });
+
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

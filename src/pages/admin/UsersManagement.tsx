@@ -7,7 +7,11 @@ import {
     Plus,
     Users,
     Trash2,
-    Shield
+    Shield,
+    Calendar,
+    Mail,
+    User as UserIcon,
+    CreditCard
 } from "lucide-react";
 import {
     Table,
@@ -38,6 +42,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -56,6 +70,12 @@ export default function UsersManagement() {
     // Add User Form State
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
     const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "user", plan: "none" });
+
+    // View Profile State
+    const [viewUser, setViewUser] = useState<any | null>(null);
+
+    // Delete User State
+    const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -107,6 +127,21 @@ export default function UsersManagement() {
         } catch (error) {
             console.error(error);
             toast.error("Erro ao alterar status do usuário.");
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        if (!deleteUserId) return;
+        try {
+            await apiFetch(`/api/admin/users/${deleteUserId}`, {
+                method: 'DELETE'
+            });
+            toast.success("Usuário excluído permanentemente.");
+            setDeleteUserId(null);
+            fetchUsers();
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao excluir usuário.");
         }
     };
 
@@ -337,18 +372,24 @@ export default function UsersManagement() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-slate-900 border-white/10 text-white">
                                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                                            <DropdownMenuItem className="hover:bg-white/10 cursor-pointer">
+                                            <DropdownMenuItem className="hover:bg-white/10 cursor-pointer" onClick={() => setViewUser(user)}>
                                                 <Eye className="mr-2 h-4 w-4 text-gray-400" /> Ver Perfil
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => handleBanUser(user.id, user.role)}
-                                                className="hover:bg-red-900/20 text-red-400 cursor-pointer"
+                                                className="hover:bg-red-900/20 text-yellow-400 cursor-pointer"
                                             >
                                                 {user.role === 'banned' ? (
                                                     <><Shield className="mr-2 h-4 w-4" /> Reativar Conta</>
                                                 ) : (
-                                                    <><Trash2 className="mr-2 h-4 w-4" /> Banir Usuário</>
+                                                    <><Shield className="mr-2 h-4 w-4" /> Banir Usuário</>
                                                 )}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => setDeleteUserId(user.id)}
+                                                className="hover:bg-red-900/20 text-red-400 cursor-pointer"
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" /> Excluir Permanentemente
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -358,6 +399,69 @@ export default function UsersManagement() {
                     </TableBody >
                 </Table >
             </div >
+
+            {/* View Profile Dialog */}
+            <Dialog open={!!viewUser} onOpenChange={(open) => !open && setViewUser(null)}>
+                <DialogContent className="bg-slate-900 text-white border-white/10 sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Perfil do Usuário</DialogTitle>
+                    </DialogHeader>
+                    {viewUser && (
+                        <div className="flex flex-col gap-6 py-4">
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-20 w-20 border-2 border-purple-500/50">
+                                    <AvatarImage src={viewUser.avatar_url} />
+                                    <AvatarFallback className="text-2xl bg-purple-500/20">{viewUser.full_name?.substring(0, 2) || "??"}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h2 className="text-xl font-bold">{viewUser.full_name || "Sem Nome"}</h2>
+                                    <p className="text-gray-400 text-sm flex items-center gap-1"><Mail className="h-3 w-3" /> {viewUser.email}</p>
+                                    <div className="mt-2">
+                                        <Badge variant="outline" className={cn(getRoleBadge(viewUser.role))}>{viewUser.role}</Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-blue-500/20 text-blue-400"><Calendar className="h-5 w-5" /></div>
+                                        <div>
+                                            <p className="text-xs text-gray-400">Data de Cadastro</p>
+                                            <p className="font-medium">{new Date(viewUser.created_at).toLocaleDateString('pt-BR')} às {new Date(viewUser.created_at).toLocaleTimeString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-green-500/20 text-green-400"><CreditCard className="h-5 w-5" /></div>
+                                        <div>
+                                            <p className="text-xs text-gray-400">ID do Usuário</p>
+                                            <p className="font-mono text-xs">{viewUser.id}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Alert */}
+            <AlertDialog open={!!deleteUserId} onOpenChange={(open) => !open && setDeleteUserId(null)}>
+                <AlertDialogContent className="bg-slate-900 border-white/10 text-white">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-400">
+                            Essa ação não pode ser desfeita. Isso excluirá permanentemente o usuário e removerá todos os dados dos nossos servidores.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/10 hover:text-white">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteUser} className="bg-red-600 hover:bg-red-700 text-white border-0">Sim, excluir usuário</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div >
     );
 }
