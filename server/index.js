@@ -52,17 +52,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Endpoints do Admin Panel (SHARED/VIDEO/SYSTEM)
 // ============================================
 import { requireAdmin } from './middleware/auth.js';
+import adminRoutes from './routes/admin.js';
 
-// Listar Usuários
-app.get('/api/admin/users', requireAdmin, async (req, res) => {
-  try {
-    const { data: users, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    res.json({ users, total: users.length });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+app.use('/api/admin', adminRoutes);
+
+// Listar Assinaturas (Mantido aqui por enquanto ou mover depois)
 
 // Listar Assinaturas
 app.get('/api/admin/subscriptions', requireAdmin, async (req, res) => {
