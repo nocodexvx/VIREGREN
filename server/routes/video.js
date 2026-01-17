@@ -124,6 +124,7 @@ async function processVideo(jobId, inputPath, variations) {
             const p = new Promise((resolve, reject) => {
                 let command = ffmpeg(inputPath)
                     .videoFilters(i % 2 === 0 ? 'hue=s=0' : 'eq=contrast=1.2')
+                    .outputOptions('-preset ultrafast')
                     .output(outputPath)
                     .on('end', () => resolve())
                     .on('error', (err) => reject(err));
