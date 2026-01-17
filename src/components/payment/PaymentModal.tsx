@@ -23,6 +23,7 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
 
     // Form states
     const [cpf, setCpf] = useState('');
+    const [cpfError, setCpfError] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -30,8 +31,46 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
     const [pixCode, setPixCode] = useState('');
     const [copied, setCopied] = useState(false);
 
+    // CPF Validator
+    const validateCPF = (cpf: string) => {
+        cpf = cpf.replace(/[^\d]+/g, '');
+        if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+
+        let sum = 0;
+        let remainder;
+        for (let i = 1; i <= 9; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+        remainder = (sum * 10) % 11;
+        if ((remainder === 10) || (remainder === 11)) remainder = 0;
+        if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+
+        sum = 0;
+        for (let i = 1; i <= 10; i++) sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+        remainder = (sum * 10) % 11;
+        if ((remainder === 10) || (remainder === 11)) remainder = 0;
+        if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+
+        return true;
+    };
+
+    const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setCpf(val);
+        if (val.replace(/\D/g, '').length === 11) {
+            if (!validateCPF(val)) setCpfError('CPF inválido');
+            else setCpfError('');
+        } else {
+            setCpfError('');
+        }
+    };
+
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validateCPF(cpf)) {
+            toast.error('CPF inválido. Verifique os números.');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -174,10 +213,12 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
                             <Input
                                 placeholder="000.000.000-00"
                                 value={cpf}
-                                onChange={(e) => setCpf(e.target.value)}
-                                className="bg-secondary border-border"
+                                onChange={handleCpfChange}
+                                className={`bg-secondary border-border ${cpfError ? 'border-red-500' : ''}`}
                                 required
+                                maxLength={14}
                             />
+                            {cpfError && <span className="text-xs text-red-500">{cpfError}</span>}
                         </div>
 
                         <Button type="submit" className="w-full gradient-primary" disabled={loading}>
