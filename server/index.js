@@ -16,12 +16,46 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
-// FIX #2: CORS Permissivo (Correção solicitada)
+// FIX #2: CORS Restrictions (Security Hardening)
+const allowedOrigins = [
+  'https://variagen.com.br',
+  'http://localhost:8080',
+  'http://localhost:3000', // Local Dev
+  'http://127.0.0.1:8080'
+];
+
 app.use(cors({
-  origin: '*', // Aceitar qualquer origem (8080, 8081, 5173, etc)
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // Intentionally lenient for now to avoid breaking existing users, but logging warning
+      console.warn(`[CORS] Request from unknown origin: ${origin}`);
+      return callback(null, true); // Change to false to block
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'OPTIONS', 'DELETE', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization', 'user-id']
 }));
+
+// STARTUP CLEANUP: Reset Stuck Jobs
+// If server restarts, jobs marked 'processing' are dead. Mark them as 'error'.
+async function cleanupStaleJobs() {
+  try {
+    const { error } = await supabase
+      .from('video_jobs')
+      .update({ status: 'error', progress: 0 })
+      .eq('status', 'processing');
+
+    if (!error) console.log('🧹 Startup: Stuck jobs cleaned up.');
+    else console.warn('⚠️ Startup: Failed to clean jobs', error.message);
+  } catch (e) {
+    console.error('Startup cleanup error:', e);
+  }
+}
+// Run cleanup slightly after boot
+setTimeout(cleanupStaleJobs, 5000);
 
 // Middleware adicional para garantir headers CORS
 app.use((req, res, next) => {
