@@ -8,16 +8,23 @@ dotenv.config();
 const router = express.Router();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// SERVICE ROLE CLIENT (Required for Admin User Actions)
-// Falls back to standard key if service role is missing (limiting functionality)
-const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-    : supabase;
+// SERVICE ROLE CLIENT (Required for Admin User Actions & Bypassing RLS)
+const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    }
+);
 
 // LIST USERS
 router.get('/users', requireAdmin, async (req, res) => {
     try {
-        const { data: users, error } = await supabase
+        // Use Admin Client to bypass RLS policies
+        const { data: users, error } = await supabaseAdmin
             .from('users')
             .select('*')
             .order('created_at', { ascending: false });
