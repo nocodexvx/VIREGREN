@@ -68,20 +68,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const fetchSubscriptionStatus = async (userId: string) => {
+        // Prevent simultaneous checks or checks on invalid ID
+        if (!userId) {
+            setSubscriptionStatus(null);
+            return;
+        }
+
         try {
+            // Add slight delay to allow auth session to settle (race condition fix)
+            await new Promise(r => setTimeout(r, 100));
+
             const { data, error } = await supabase
                 .from('subscriptions')
                 .select('status')
                 .eq('user_id', userId)
-                .maybeSingle(); // Use maybeSingle to avoid errors if no row exists
+                .maybeSingle();
 
             if (!error && data) {
                 setSubscriptionStatus(data.status);
             } else {
+                if (error) console.log("Subscription check failed (benign if new user):", error.message);
                 setSubscriptionStatus(null);
             }
         } catch (error) {
-            console.error('Error fetching subscription:', error);
+            // Don't spam console with network errors on login screen
+            console.warn('Subscription fetch skipped/failed');
             setSubscriptionStatus(null);
         }
     };
