@@ -34,22 +34,22 @@ export function ProcessingSettings({ settings, onChange }: ProcessingSettingsPro
     <div className="glass rounded-xl p-6">
       <h3 className="font-semibold text-lg mb-6 flex items-center gap-2">
         <Cpu className="w-5 h-5 text-primary" />
-        Processing
+        Processamento
       </h3>
 
       <div className="space-y-6">
         {/* Workers */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Label>Workers</Label>
+            <Label>Núcleos (Workers)</Label>
             <Tooltip>
               <TooltipTrigger asChild>
                 <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent>
                 <p className="max-w-xs text-sm">
-                  More workers = faster processing, but requires more system resources. 
-                  Use 4-6 for optimal balance.
+                  Mais núcleos = processamento mais rápido, mas requer mais recursos do sistema.
+                  Use 4-6 para melhor equilíbrio.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -59,12 +59,12 @@ export function ProcessingSettings({ settings, onChange }: ProcessingSettingsPro
             onValueChange={(val) => onChange({ ...settings, workers: parseInt(val) })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select workers" />
+              <SelectValue placeholder="Selecione os núcleos" />
             </SelectTrigger>
             <SelectContent>
               {[1, 2, 4, 6, 8].map((num) => (
                 <SelectItem key={num} value={num.toString()}>
-                  {num} worker{num > 1 ? "s" : ""}
+                  {num} núcleo{num > 1 ? "s" : ""}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -73,7 +73,7 @@ export function ProcessingSettings({ settings, onChange }: ProcessingSettingsPro
 
         {/* Variations */}
         <div className="space-y-2">
-          <Label>Variations</Label>
+          <Label>Variações</Label>
           <Input
             type="number"
             min={1}
@@ -101,9 +101,9 @@ export function ProcessingSettings({ settings, onChange }: ProcessingSettingsPro
           <div className="flex items-center gap-3">
             <Zap className="w-5 h-5 text-warning" />
             <div>
-              <Label className="cursor-pointer">GPU Acceleration</Label>
+              <Label className="cursor-pointer">Aceleração de GPU</Label>
               <p className="text-xs text-muted-foreground">
-                Use graphics card for faster processing
+                Usar placa gráfica para processamento mais rápido
               </p>
             </div>
           </div>

@@ -74,7 +74,12 @@ export default function Dashboard() {
       setJobId(null);
 
       // Token is now handled automatically by apiClient inside api.processVideo
-      const response = await api.processVideo(selectedVideo, processing.variations);
+      const response = await api.processVideo(
+        selectedVideo,
+        processing.variations,
+        visualEffects,
+        timingAudio
+      );
       setJobId(response.jobId);
 
       // Start polling

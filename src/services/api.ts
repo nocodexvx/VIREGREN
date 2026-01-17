@@ -1,10 +1,12 @@
 import { apiFetch } from './apiClient';
 
 export const api = {
-    processVideo: async (file: File, variations: number) => {
+    processVideo: async (file: File, variations: number, effects: any, timing: any) => {
         const formData = new FormData();
         formData.append('video', file);
         formData.append('variations', variations.toString());
+        formData.append('visualEffects', JSON.stringify(effects));
+        formData.append('timingAudio', JSON.stringify(timing));
 
         // apiFetch automatically handles Token Injection and Error Parsing
         return await apiFetch('/api/process', {

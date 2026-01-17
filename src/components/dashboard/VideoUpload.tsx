@@ -24,7 +24,7 @@ export function VideoUpload({ onVideoSelect, selectedVideo }: VideoUploadProps) 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith("video/")) {
       onVideoSelect(file);
@@ -53,14 +53,13 @@ export function VideoUpload({ onVideoSelect, selectedVideo }: VideoUploadProps) 
     <div className="glass rounded-xl p-6">
       <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
         <Upload className="w-5 h-5 text-primary" />
-        Video Upload
+        Upload de Vídeo
       </h3>
 
       {!selectedVideo ? (
         <motion.div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-            isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-          }`}
+          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+            }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -76,12 +75,12 @@ export function VideoUpload({ onVideoSelect, selectedVideo }: VideoUploadProps) 
             className="hidden"
           />
           <Film className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-lg font-medium mb-2">Drop your video here</p>
+          <p className="text-lg font-medium mb-2">Solte seu vídeo aqui</p>
           <p className="text-sm text-muted-foreground mb-4">
-            or click to browse
+            ou clique para escolher
           </p>
           <p className="text-xs text-muted-foreground">
-            Supports MP4, MOV, AVI, MKV, WebM • Max 100MB (Free)
+            Suporta MP4, MOV, AVI, MKV, WebM • Max 100MB (Grátis)
           </p>
         </motion.div>
       ) : (

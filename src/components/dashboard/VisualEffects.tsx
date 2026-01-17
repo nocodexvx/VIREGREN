@@ -35,41 +35,41 @@ export function VisualEffects({ effects, onChange }: VisualEffectsProps) {
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-semibold text-lg flex items-center gap-2">
           <Palette className="w-5 h-5 text-primary" />
-          Visual Effects
+          Efeitos Visuais
         </h3>
         <Button variant="outline" size="sm" onClick={handleRandomize}>
           <Shuffle className="w-4 h-4 mr-2" />
-          Randomize
+          Aleatorizar
         </Button>
       </div>
 
       <div className="space-y-6">
         <RangeSlider
-          label="Brightness"
+          label="Brilho"
           min={-10}
           max={10}
           value={effects.brightness}
           onChange={(val) => onChange({ ...effects, brightness: val })}
         />
-        
+
         <RangeSlider
-          label="Contrast"
+          label="Contraste"
           min={-10}
           max={10}
           value={effects.contrast}
           onChange={(val) => onChange({ ...effects, contrast: val })}
         />
-        
+
         <RangeSlider
-          label="Saturation"
+          label="Saturação"
           min={-15}
           max={15}
           value={effects.saturation}
           onChange={(val) => onChange({ ...effects, saturation: val })}
         />
-        
+
         <RangeSlider
-          label="Hue"
+          label="Matiz"
           min={-5}
           max={5}
           value={effects.hue}

@@ -65,7 +65,7 @@ function processQueue() {
 
     console.log(`🚀 Starting Job ${nextJob.jobId} (Active: ${activeJobs})`);
 
-    processVideo(nextJob.jobId, nextJob.inputPath, nextJob.variations)
+    processVideo(nextJob.jobId, nextJob.inputPath, nextJob.variations, nextJob.visualEffects, nextJob.timingAudio)
         .finally(() => {
             activeJobs--;
             console.log(`✅ Finished Job ${nextJob.jobId} (Active: ${activeJobs})`);
@@ -90,8 +90,12 @@ router.post('/process', upload.single('video'), async (req, res) => {
             created_at: new Date()
         });
 
+        // Capture Presets
+        const visualEffects = req.body.visualEffects;
+        const timingAudio = req.body.timingAudio;
+
         // Add to Queue
-        jobQueue.push({ jobId, inputPath: req.file.path, variations });
+        jobQueue.push({ jobId, inputPath: req.file.path, variations, visualEffects, timingAudio });
 
         const position = activeJobs + jobQueue.length;
         res.json({
@@ -109,10 +113,22 @@ router.post('/process', upload.single('video'), async (req, res) => {
     }
 });
 
+// Helper to get random number in range [min, max]
+function getRandom(range) {
+    if (!Array.isArray(range) || range.length !== 2) return 0;
+    const min = parseFloat(range[0]);
+    const max = parseFloat(range[1]);
+    return Math.random() * (max - min) + min;
+}
+
 // Async Video Processor
-async function processVideo(jobId, inputPath, variations) {
+async function processVideo(jobId, inputPath, variations, effectsObj, timingObj) {
     try {
         await updateJob(jobId, { status: 'processing', progress: 5 });
+
+        // Parse JSON strings if they came as strings (FormData often sends JSON as string)
+        const visualEffects = typeof effectsObj === 'string' ? JSON.parse(effectsObj) : (effectsObj || {});
+        const timingAudio = typeof timingObj === 'string' ? JSON.parse(timingObj) : (timingObj || {});
 
         const outputs = [];
         const promises = [];
@@ -122,16 +138,23 @@ async function processVideo(jobId, inputPath, variations) {
             outputs.push(outputPath);
 
             const p = new Promise((resolve, reject) => {
-                // Generate random values within range (mocking for now since we need to pass params)
-                // Ideally, we pass these ranges from frontend. For now, let's just make it subtler.
-                const contrast = 1 + (Math.random() * 0.2 - 0.1); // 0.9 to 1.1
-                const brightness = Math.random() * 0.1 - 0.05; // -0.05 to 0.05
-                const saturation = 1 + (Math.random() * 0.2 - 0.1); // 0.9 to 1.1
+                // Generic Defaults if missing
+                const brightness = getRandom(visualEffects.brightness || [-5, 5]) / 100; // % to value? ffmpeg eq brightness is -1.0 to 1.0. 5% is 0.05
+                const contrast = 1 + (getRandom(visualEffects.contrast || [-5, 5]) / 100);
+                const saturation = 1 + (getRandom(visualEffects.saturation || [-5, 5]) / 100);
+                const hue = getRandom(visualEffects.hue || [-3, 3]);
+
+                // Timing/Audio (Mock implementation for now - simple duration cut would need probe)
+                // For now heavily relying on visual filters as main variation source
+                // Volume
+                const vol = getRandom(timingAudio.volume || [-1, 1]);
 
                 let command = ffmpeg(inputPath)
                     .videoFilters([
-                        `eq=contrast=${contrast}:brightness=${brightness}:saturation=${saturation}`
+                        `eq=contrast=${contrast.toFixed(2)}:brightness=${brightness.toFixed(2)}:saturation=${saturation.toFixed(2)}`,
+                        `hue=h=${hue.toFixed(0)}`
                     ])
+                    .audioFilters(`volume=${(1 + vol / 10).toFixed(2)}`) // rough dB approx
                     .outputOptions('-preset ultrafast')
                     .output(outputPath)
                     .on('end', () => resolve())
