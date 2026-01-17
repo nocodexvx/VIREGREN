@@ -89,8 +89,10 @@ router.post('/users', requireAdmin, async (req, res) => {
         }
 
         // 3. Insert Subscription (if plan selected)
+        // 3. Insert Subscription (if plan selected)
+        let createdSubscription = null;
         if (plan && plan !== 'none') {
-            const { error: subError } = await supabaseAdmin
+            const { data: subData, error: subError } = await supabaseAdmin
                 .from('subscriptions')
                 .insert({
                     user_id: userId,
@@ -98,9 +100,17 @@ router.post('/users', requireAdmin, async (req, res) => {
                     plan_id: plan,
                     current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year free
                     created_at: new Date()
-                });
+                })
+                .select()
+                .single();
 
-            if (subError) console.error("Error creating manual subscription:", subError);
+            if (subError) {
+                console.error("Error creating manual subscription:", subError);
+                // NOT blocking user creation, but logging it.
+            } else {
+                createdSubscription = subData;
+                console.log(`[Admin] Manual subscription created: ${subData.id}`);
+            }
         }
 
         res.json({ message: 'Usuário criado com sucesso!', user: authData.user });
