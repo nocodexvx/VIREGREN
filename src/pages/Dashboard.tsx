@@ -104,13 +104,13 @@ export default function Dashboard() {
           <div className="mb-8 p-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl border border-purple-500/30">
             <h1 className="text-3xl font-bold mb-2 text-white">🔥 Estratégia de Escala Viral</h1>
             <p className="text-gray-300 mb-4">
-              Preset carregado automaticamente para modelos de Alta Performance.
+              Configuração Automática para Máxima Performance no Instagram.
             </p>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-400">
-              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> 21 Variações (Postar 3x por dia)</li>
-              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Postar como "Trial Reels" (para não-seguidores)</li>
-              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Metadados e Filtros Únicos</li>
-              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Use sempre o vídeo original (alta qualidade)</li>
+              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> <strong>21 Variações</strong> (Postar 3x por dia durante uma semana)</li>
+              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Postar como <strong>"Reels de Teste"</strong> (Trial Reels)</li>
+              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> <strong>Metadados Únicos</strong> (Engana o algoritmo para evitar shadowban)</li>
+              <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Use sempre o vídeo original com <strong>alta qualidade</strong></li>
             </ul>
           </div>
 
@@ -135,15 +135,7 @@ export default function Dashboard() {
               onStop={handleStop}
               canStart={!!selectedVideo && !isProcessing}
             />
-            {isComplete && (
-              <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-2">Processing Complete</h3>
-                <a href={zipUrl as string} className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                  Download ZIP Results
-                </a>
-              </div>
-            )}
-            <OutputResults variations={processing.variations} isComplete={isComplete} />
+            <OutputResults variations={processing.variations} isComplete={isComplete} zipUrl={zipUrl} />
           </div>
         </div>
       </main>

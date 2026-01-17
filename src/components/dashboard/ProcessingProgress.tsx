@@ -27,14 +27,14 @@ export function ProcessingProgress({
     if (current === 0 || !isProcessing) return null;
     const avgTimePerVariation = 2; // seconds estimate
     const remaining = (total - current) * avgTimePerVariation;
-    if (remaining < 60) return `${remaining}s remaining`;
-    return `${Math.ceil(remaining / 60)}m remaining`;
+    if (remaining < 60) return `${remaining}s restantes`;
+    return `${Math.ceil(remaining / 60)}m restantes`;
   };
 
   return (
     <div className="glass rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg">Progress</h3>
+        <h3 className="font-semibold text-lg">Progresso</h3>
         {isProcessing && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4" />
@@ -55,17 +55,17 @@ export function ProcessingProgress({
             ) : null}
             <span className="text-sm">
               {isComplete
-                ? "Complete!"
+                ? "Concluído!"
                 : isProcessing
-                ? `Processing ${current}/${total} (${Math.round(progress)}%)`
-                : `Ready to generate ${total} variations`}
+                  ? `Processando ${current}/${total} (${Math.round(progress)}%)`
+                  : `Pronto para gerar ${total} variações`}
             </span>
           </div>
 
           {isProcessing ? (
             <Button variant="destructive" size="sm" onClick={onStop}>
               <Square className="w-4 h-4 mr-2" />
-              Stop
+              Parar
             </Button>
           ) : (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -75,7 +75,7 @@ export function ProcessingProgress({
                 onClick={onStart}
                 disabled={!canStart}
               >
-                Generate {total} Variations
+                Gerar {total} Variações
               </Button>
             </motion.div>
           )}
