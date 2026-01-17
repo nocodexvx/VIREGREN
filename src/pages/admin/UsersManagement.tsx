@@ -405,6 +405,9 @@ export default function UsersManagement() {
                 <DialogContent className="bg-slate-900 text-white border-white/10 sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Perfil do Usuário</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Detalhes completos sobre a conta e assinatura do usuário.
+                        </DialogDescription>
                     </DialogHeader>
                     {viewUser && (
                         <div className="flex flex-col gap-6 py-4">
