@@ -59,8 +59,11 @@ export function PaymentModal({ isOpen, onClose, plan, price }: PaymentModalProps
             if (!userId) throw new Error('Falha ao identificar usuário.');
 
             // 2. Create Subscription & PIX
+            // We set requireAuth: false because if email confirmation is enabled, 
+            // the user might not have a session yet, but we still want to let them pay.
             const data = await apiFetch('/api/payments/subscribe', {
                 method: 'POST',
+                requireAuth: false,
                 body: JSON.stringify({
                     userId,
                     plan,
