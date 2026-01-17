@@ -31,12 +31,13 @@ export const requireAdmin = async (req, res, next) => {
     try {
         const user = await verifyToken(req);
 
-        // BYPASS: Allow Owner directly (DB connection for schema changes is flaky)
-        const adminEmails = ['admin@variagen.com', 'admin@admin.com', 'suporte@variagen.com', 'yurigabriel160218@gmail.com'];
+        // BYPASS: Allow Owner directly via Environment Variable
+        const envAdmins = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
+        const adminEmails = ['admin@variagen.com', 'suporte@variagen.com', ...envAdmins];
 
         console.log(`[AuthMiddleware] Checking Admin access for: ${user.email}`);
 
-        if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+        if (user.email && adminEmails.some(email => email.trim().toLowerCase() === user.email.toLowerCase())) {
             console.log('[AuthMiddleware] Access GRANTED via Email Bypass');
             req.user = user;
             return next();

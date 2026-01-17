@@ -202,6 +202,20 @@ async function processVideo(jobId, inputPath, variations, effectsObj, timingObj)
                 if (logError) console.warn("Failed to log usage:", logError);
 
                 resolve();
+
+                // ANTIGRAVITY FIX: CLEANUP TEMP FILES (Prevent Disk Full)
+                try {
+                    // 1. Delete Input Video
+                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+
+                    // 2. Delete Intermediate Frames (Outputs)
+                    outputs.forEach(file => {
+                        if (fs.existsSync(file)) fs.unlinkSync(file);
+                    });
+                    console.log(`🧹 Cleanup finished for job ${jobId}`);
+                } catch (cleanupErr) {
+                    console.error(`Cleanup failed for job ${jobId}`, cleanupErr);
+                }
             });
 
             archive.on('error', async (err) => {
