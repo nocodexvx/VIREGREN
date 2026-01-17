@@ -55,7 +55,7 @@ export default function UsersManagement() {
 
     // Add User Form State
     const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-    const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "user" });
+    const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "user", plan: "none" });
 
     useEffect(() => {
         fetchUsers();
@@ -81,12 +81,13 @@ export default function UsersManagement() {
                     email: newUser.email,
                     password: newUser.password,
                     fullName: newUser.name,
-                    role: newUser.role
+                    role: newUser.role,
+                    plan: newUser.plan
                 })
             });
             toast.success("Usuário criado com sucesso!");
             setIsAddUserOpen(false);
-            setNewUser({ name: "", email: "", password: "", role: "user" });
+            setNewUser({ name: "", email: "", password: "", role: "user", plan: "none" });
             fetchUsers();
         } catch (error) {
             console.error(error);
@@ -216,6 +217,19 @@ export default function UsersManagement() {
                                         <SelectContent className="bg-slate-800 border-white/10 text-white">
                                             <SelectItem value="user">Usuário</SelectItem>
                                             <SelectItem value="admin">Admin</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="plan" className="text-right">Plano Inicial</Label>
+                                    <Select value={newUser.plan} onValueChange={v => setNewUser({ ...newUser, plan: v })}>
+                                        <SelectTrigger className="w-[180px] bg-slate-800 border-white/10 text-white">
+                                            <SelectValue placeholder="Selecione" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-white/10 text-white">
+                                            <SelectItem value="none">Sem Plano (Bloqueado)</SelectItem>
+                                            <SelectItem value="pro_monthly">Pro (Liberado)</SelectItem>
+                                            <SelectItem value="business_monthly">Business (Liberado)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

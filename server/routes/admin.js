@@ -39,7 +39,7 @@ router.get('/users', requireAdmin, async (req, res) => {
 // CREATE USER (ADMIN ONLY)
 router.post('/users', requireAdmin, async (req, res) => {
     try {
-        const { email, password, fullName, role } = req.body;
+        const { email, password, fullName, role, plan } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
@@ -54,9 +54,6 @@ router.post('/users', requireAdmin, async (req, res) => {
         });
 
         if (authError) {
-            // Fallback: If no Service Role, try normal signUp (will log out admin on client if used there, but here is server)
-            // Actually unsafe to use standard client for "admin create" as it might start a session.
-            // Best to error out if no Service Role.
             console.error("Auth Create Error:", authError);
             return res.status(400).json({ error: 'Falha ao criar usuário. Verifique se a KEY de serviço está configurada.' });
         }
@@ -75,9 +72,24 @@ router.post('/users', requireAdmin, async (req, res) => {
             });
 
         if (dbError) {
-            // Rollback auth user if DB fails? complex. Just warn for now.
             console.error("DB Insert Error:", dbError);
             return res.status(500).json({ error: 'Erro ao salvar dados do usuário no banco.' });
+        }
+
+        // 3. Insert Subscription (if plan selected)
+        // If plan is 'none' or undefined, no subscription is created -> User has NO access (must pay)
+        if (plan && plan !== 'none') {
+            const { error: subError } = await supabase
+                .from('subscriptions')
+                .insert({
+                    user_id: userId,
+                    status: 'active', // Admin granted access
+                    plan_id: plan,
+                    current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year free
+                    created_at: new Date()
+                });
+
+            if (subError) console.error("Error creating manual subscription:", subError);
         }
 
         res.json({ message: 'Usuário criado com sucesso!', user: authData.user });
