@@ -8,6 +8,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+import { AdminRoute } from "@/components/auth/AdminRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UsersManagement from "./pages/admin/UsersManagement";
@@ -48,9 +50,13 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
             </Route>
 
-            {/* Admin Routes - Protected */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/admin" element={<AdminLayout />}>
+            {/* Admin Routes - Protected & Isolated */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={
+                <AdminErrorBoundary>
+                  <AdminLayout />
+                </AdminErrorBoundary>
+              }>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<UsersManagement />} />
                 <Route path="subscriptions" element={<Subscriptions />} />

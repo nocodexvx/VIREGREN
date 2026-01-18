@@ -46,6 +46,21 @@ export async function apiFetch(endpoint: string, options: FetchOptions = {}) {
 
     if (!response.ok) {
         const errorMsg = typeof data === 'object' && data.error ? data.error : 'API Error';
+
+        if (response.status === 401) {
+            // Optional: redirect to login or clear token if needed
+            sessionStorage.removeItem('sb-access-token'); // Example cleanup
+            throw new Error('401 Unauthorized: Sessão expirada ou inválida.');
+        }
+
+        if (response.status === 403) {
+            throw new Error('403 Forbidden: Você não tem permissão para realizar esta ação.');
+        }
+
+        if (response.status === 500) {
+            throw new Error(`500 Internal Server Error: ${errorMsg}`);
+        }
+
         throw new Error(`${response.status} ${errorMsg}`);
     }
 

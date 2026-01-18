@@ -41,5 +41,10 @@ export const useUsers = ({ page, limit, search, role }: UseUsersParams) => {
         },
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60, // 1 minute
+        retry: (failureCount, error) => {
+            // Don't retry on 401/403/404
+            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('404')) return false;
+            return failureCount < 2;
+        }
     });
 };

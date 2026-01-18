@@ -7,16 +7,8 @@ import { cn } from "@/lib/utils";
 
 export default function AdminLayout() {
     const [collapsed, setCollapsed] = useState(false);
-    const { isAdmin, loading } = useAuth();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!loading && !isAdmin) {
-            navigate('/dashboard');
-        }
-    }, [isAdmin, loading, navigate]);
-
-    if (!isAdmin) return null;
+    // Auth check is now handled consistently by AdminRoute wrapper
+    // internal redirects removed to prevent race conditions
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
