@@ -1,24 +1,28 @@
-# Base Image with Node.js 20
+# Base Image
 FROM node:20-slim
 
-# Install system dependencies (ffmpeg is still needed for runtime)
+# Install dependencies for canvas/ffmpeg
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    python3 \
+    make \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# 1. Setup Backend (Runtime only)
+# Copy dependency definitions
+COPY package*.json ./
 COPY server/package*.json ./server/
-WORKDIR /app/server
-RUN npm install --omit=dev
 
-# 2. Setup Application
-WORKDIR /app
+# Install dependencies (All)
+RUN npm install
 
-# Copy Pre-built Frontend (dist) and Backend Source
-COPY dist ./dist
-COPY server ./server
+# Copy Source Code
+COPY . .
+
+# Build Frontend
+RUN npm run build
 
 # Expose API Port
 EXPOSE 3000
