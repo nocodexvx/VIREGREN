@@ -8,7 +8,9 @@ server/node_modules
 .DS_Store
 
 # Build Output
-dist
+# Build Output
+# dist (Committing dist for VPS performance)
+server/uploads/*
 server/uploads/*
 server/outputs/*
 logs/*
