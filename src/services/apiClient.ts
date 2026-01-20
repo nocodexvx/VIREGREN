@@ -7,10 +7,7 @@ interface FetchOptions extends RequestInit {
 // If no VITE_API_URL is set, default to empty string (relative path).
 // CRITICAL FIX: Ignore 'localhost' if it accidentally leaks into production env vars.
 let envUrl = import.meta.env.VITE_API_URL || '';
-if (envUrl.includes('localhost')) {
-    console.warn('⚠️ Localhost detected in API URL, switching to relative path.');
-    envUrl = '';
-}
+// Localhost check removed to allow local development
 const API_BASE_URL = envUrl;
 
 export async function apiFetch(endpoint: string, options: FetchOptions = {}) {

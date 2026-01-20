@@ -39,7 +39,19 @@ export default function SystemConfig() {
 
     useEffect(() => {
         checkStatus();
+        fetchConfig();
     }, [session]);
+
+    const fetchConfig = async () => {
+        try {
+            const data = await apiFetch('/api/admin/config');
+            if (data.general) {
+                setIsMaintenanceMode(data.general.maintenanceMode);
+            }
+        } catch (e) {
+            console.error("Failed to fetch config", e);
+        }
+    };
 
     const checkStatus = async () => {
         try {
@@ -50,8 +62,22 @@ export default function SystemConfig() {
         }
     };
 
-    const handleSave = () => {
-        toast.success("Configurações salvas com sucesso!");
+    const handleSave = async () => {
+        try {
+            await apiFetch('/api/admin/config', {
+                method: 'POST',
+                body: JSON.stringify({
+                    key: 'general',
+                    value: {
+                        maintenanceMode: isMaintenanceMode,
+                        updatedAt: new Date()
+                    }
+                })
+            });
+            toast.success("Configurações salvas com sucesso!");
+        } catch (e) {
+            toast.error("Erro ao salvar config");
+        }
     };
 
     return (
@@ -103,6 +129,18 @@ export default function SystemConfig() {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                                <div className="space-y-0.5">
+                                    <Label className="text-gray-200">Modo Manutenção</Label>
+                                    <p className="text-xs text-gray-400">Bloqueia acesso a usuários comuns</p>
+                                </div>
+                                <Switch
+                                    checked={isMaintenanceMode}
+                                    onCheckedChange={setIsMaintenanceMode}
+                                    className="data-[state=checked]:bg-red-500"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -150,6 +188,9 @@ export default function SystemConfig() {
                             <div className="pt-2 flex gap-3">
                                 <Button onClick={checkStatus} variant="outline" className="border-white/10 text-gray-300 hover:bg-white/5">
                                     <RefreshCw className="mr-2 h-4 w-4" /> Testar Conexão
+                                </Button>
+                                <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white">
+                                    <Save className="mr-2 h-4 w-4" /> Salvar Alterações
                                 </Button>
                             </div>
                         </div>

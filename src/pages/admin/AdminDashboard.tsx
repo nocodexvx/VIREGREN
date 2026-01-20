@@ -51,22 +51,27 @@ export default function AdminDashboard() {
 
                 // Check if we gained a new subscriber since last fetch (only if not initial load)
                 setStats(prev => {
-                    if (prev.activeSubscribers > 0 && statsData.activeSubscribers > prev.activeSubscribers) {
-                        toast.success(`🎉 Nova Venda! Total: ${statsData.activeSubscribers}`, {
-                            duration: 5000,
-                            position: 'top-right',
-                            style: { background: '#10B981', color: '#fff', border: 'none' }
-                        });
-                        // Play notification sound
-                        const audio = new Audio('/notification.mp3');
-                        audio.play().catch(e => console.log('Audio play failed', e)); // Silent fail if no interaction
+                    if (statsData) {
+                        if (prev.activeSubscribers > 0 && statsData.activeSubscribers > prev.activeSubscribers) {
+                            toast.success(`🎉 Nova Venda! Total: ${statsData.activeSubscribers}`, {
+                                duration: 5000,
+                                position: 'top-right',
+                                style: { background: '#10B981', color: '#fff', border: 'none' }
+                            });
+                            // Play notification sound
+                            const audio = new Audio('/notification.mp3');
+                            audio.play().catch(e => console.log('Audio play failed', e)); // Silent fail if no interaction
+                        }
+                        return statsData;
                     }
-                    return statsData;
+                    return prev;
                 });
 
                 // Fetch Users for Recent Activity
                 const usersData = await apiFetch('/api/admin/users');
-                setRecentUsers(usersData.users.slice(0, 5));
+                if (usersData?.users) {
+                    setRecentUsers(usersData.users.slice(0, 5));
+                }
 
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
@@ -87,7 +92,8 @@ export default function AdminDashboard() {
         return <div className="flex h-96 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
     }
 
-    const arr = stats.mrr * 12;
+    const mrr = stats?.mrr || 0;
+    const arr = mrr * 12;
 
     return (
         <div className="space-y-6">
@@ -119,7 +125,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="space-y-1">
                         <p className="text-sm text-gray-400">Receita Mensal (MRR)</p>
-                        <h3 className="text-2xl font-bold text-white">R$ {stats.mrr.toLocaleString('pt-BR')}</h3>
+                        <h3 className="text-2xl font-bold text-white">R$ {(stats?.mrr || 0).toLocaleString('pt-BR')}</h3>
                     </div>
                     <div className="h-10 mt-4 -mx-2">
                         <ResponsiveContainer width="100%" height="100%">
@@ -160,7 +166,7 @@ export default function AdminDashboard() {
                     <div className="flex justify-between items-end">
                         <div className="space-y-1">
                             <p className="text-sm text-gray-400">Assinantes Ativos</p>
-                            <h3 className="text-2xl font-bold text-white">{stats.activeSubscribers}</h3>
+                            <h3 className="text-2xl font-bold text-white">{stats?.activeSubscribers || 0}</h3>
                         </div>
                         <div className="h-12 w-12">
                             <ResponsiveContainer width="100%" height="100%">
@@ -188,7 +194,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="space-y-1">
                         <p className="text-sm text-gray-400">Taxa de Cancelamento</p>
-                        <h3 className="text-2xl font-bold text-white">{stats.churnRate}%</h3>
+                        <h3 className="text-2xl font-bold text-white">{stats?.churnRate || 0}%</h3>
                         <p className="text-xs text-gray-500">0 cancelamentos este mês</p>
                     </div>
                 </div>

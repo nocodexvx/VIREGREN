@@ -471,7 +471,7 @@ export default function UsersManagement() {
                                         <div className="p-2 rounded-full bg-blue-500/20 text-blue-400"><Calendar className="h-5 w-5" /></div>
                                         <div>
                                             <p className="text-xs text-gray-400">Data de Cadastro</p>
-                                            <p className="font-medium">{new Date(viewUser.created_at).toLocaleDateString('pt-BR')} às {new Date(viewUser.created_at).toLocaleTimeString('pt-BR')}</p>
+                                            <p className="font-medium">{viewUser.created_at ? new Date(viewUser.created_at).toLocaleDateString('pt-BR') : 'N/A'} às {viewUser.created_at ? new Date(viewUser.created_at).toLocaleTimeString('pt-BR') : ''}</p>
                                         </div>
                                     </div>
                                 </div>

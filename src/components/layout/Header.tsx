@@ -40,6 +40,10 @@ export function Header() {
               </a>
             </>
           )}
+          <Link to="/tools/metadata" className="text-muted-foreground hover:text-purple-400 transition-colors flex items-center gap-1 font-medium">
+            <Zap className="w-4 h-4" />
+            Limpador Grátis
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -50,6 +54,10 @@ export function Header() {
                   <Link to="/admin">Admin</Link>
                 </Button>
               )}
+
+              <Button variant="ghost" asChild>
+                <Link to="/tools/metadata">Limpador de Metadados</Link>
+              </Button>
 
               <Button variant="ghost" asChild>
                 <Link to="/dashboard">Dashboard</Link>

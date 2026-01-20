@@ -26,6 +26,20 @@ const plans = [
     popular: true
   },
   {
+    id: "tester",
+    name: "Tester",
+    price: { monthly: 5, yearly: 5 },
+    description: "Para testar o fluxo de pagamento",
+    features: [
+      "Acesso por 24h",
+      "5 vídeo teste",
+      "Processamento padrão",
+      "Sem suporte prioritário"
+    ],
+    cta: "Testar Agora",
+    popular: false
+  },
+  {
     id: "business",
     name: "Business",
     price: { monthly: 99, yearly: 990 },
@@ -51,8 +65,8 @@ export function PricingSection() {
   const [selectedPlan, setSelectedPlan] = useState<{ id: string, price: string } | null>(null);
 
   const handleSubscribe = (plan: typeof plans[0]) => {
-    const price = isYearly ? plan.price.yearly : plan.price.monthly;
-    const planId = `${plan.id}_${isYearly ? 'yearly' : 'monthly'}`;
+    const price = plan.id === 'tester' ? 5 : (isYearly ? plan.price.yearly : plan.price.monthly);
+    const planId = plan.id === 'tester' ? 'tester' : `${plan.id}_${isYearly ? 'yearly' : 'monthly'}`;
 
     setSelectedPlan({
       id: planId,

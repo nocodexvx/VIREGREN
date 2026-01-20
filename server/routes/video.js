@@ -102,6 +102,7 @@ router.post('/process', requireAuth, upload.single('video'), async (req, res) =>
         // DB Log
         await supabase.from('video_jobs').insert({
             job_id: jobId,
+            user_id: user.id, // Track owner
             status: 'queued', // Start as queued
             progress: 0,
             variations: variations,
@@ -231,6 +232,16 @@ async function processVideo(jobId, inputPath, variations, effectsObj, timingObj)
                         if (fs.existsSync(file)) fs.unlinkSync(file);
                     });
                     console.log(`🧹 Cleanup finished for job ${jobId}`);
+
+                    // 3. FAILSAFE: Auto-delete ZIP after 30 minutes if not downloaded
+                    setTimeout(() => {
+                        if (fs.existsSync(zipPath)) {
+                            fs.unlinkSync(zipPath);
+                            console.log(`⏰ Time-out: Deleted stale zip for job ${jobId}`);
+                            supabase.from('video_jobs').update({ status: 'expired' }).eq('job_id', jobId).then();
+                        }
+                    }, 30 * 60 * 1000); // 30 minutes
+
                 } catch (cleanupErr) {
                     console.error(`Cleanup failed for job ${jobId}`, cleanupErr);
                 }
@@ -277,7 +288,32 @@ router.get('/download/:id', async (req, res) => {
     if (error || !job || job.status !== 'done') return res.status(404).json({ error: 'File not ready' });
     if (!job.zip_path || !fs.existsSync(job.zip_path)) return res.status(404).json({ error: 'File missing on server' });
 
-    res.download(job.zip_path, `variagen_results_${req.params.id}.zip`);
+    // FIX: Detect actual extension (zip for videos, jpg/png for tools)
+    // IMPORTANT: .zip is NOT hardcoded anymore
+    const ext = path.extname(job.zip_path) || '.zip';
+    const filename = `variagen_results_${req.params.id}${ext}`;
+
+    // Send file and delete immediately after
+    res.download(job.zip_path, filename, async (err) => {
+        if (err) {
+            console.error('Download error:', err);
+            // Verify if headers sent, etc.
+        }
+
+        // DELETE FILE AFTER SENDING (Ephemeral Storage)
+        try {
+            if (fs.existsSync(job.zip_path)) {
+                fs.unlinkSync(job.zip_path);
+                console.log(`🗑️ Ephemeral: Deleted file for job ${req.params.id} after download.`);
+            }
+
+            // Optional: Mark as 'deleted' in DB so UI knows it's gone
+            await supabase.from('video_jobs').update({ status: 'expired' }).eq('job_id', req.params.id);
+
+        } catch (e) {
+            console.error('Failed to auto-delete file:', e);
+        }
+    });
 });
 
 export default router;

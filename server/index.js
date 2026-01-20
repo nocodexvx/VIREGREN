@@ -90,85 +90,7 @@ import adminRoutes from './routes/admin.js';
 
 app.use('/api/admin', adminRoutes);
 
-// Listar Assinaturas (Mantido aqui por enquanto ou mover depois)
-
-// Listar Assinaturas
-app.get('/api/admin/subscriptions', requireAdmin, async (req, res) => {
-  try {
-    const { data: subs, error } = await supabase
-      .from('subscriptions')
-      .select('*, users(email, full_name, avatar_url)')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json({ subscriptions: subs });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Listar Logs de IA
-app.get('/api/admin/logs', requireAdmin, async (req, res) => {
-  try {
-    const { data: logs, error } = await supabase
-      .from('ai_usage_logs')
-      .select('*, users(email)')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error) throw error;
-    res.json({ logs: logs });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Estatísticas
-app.get('/api/admin/stats', requireAdmin, async (req, res) => {
-  try {
-    // Busca real de contagens
-    const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
-
-    // Buscar assinaturas ativas
-    const { data: subs, error } = await supabase.from('subscriptions').select('plan_id').eq('status', 'active');
-
-    if (error) throw error;
-
-    // Calcular MRR real
-    const mrr = subs.reduce((total, sub) => {
-      const price = sub.plan_id === 'business' ? 99 : sub.plan_id === 'pro' ? 29 : 0;
-      return total + price;
-    }, 0);
-
-    res.json({
-      mrr,
-      activeSubscribers: subs.length,
-      totalUsers: userCount || 0,
-      churnRate: 0 // Mock por enquanto
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Status da Config
-app.get('/api/admin/config/status', requireAdmin, async (req, res) => {
-  // Testar conexão real
-  const { error } = await supabase.from('users').select('id').limit(1);
-
-  // Verificar API Key do Google
-  const googleKey = process.env.GOOGLE_AI_API_KEY;
-
-  res.json({
-    googleAI: {
-      configured: !!googleKey
-    },
-    database: {
-      type: 'supabase (production)',
-      status: error ? 'error' : 'connected'
-    }
-  });
-});
+// Endpoints do Admin Panel (SHARED/VIDEO/SYSTEM) are handled in ./routes/admin.js
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -195,6 +117,12 @@ app.use('/api', videoRoutes);
 // ============================================
 import paymentRoutes from './routes/payments.js';
 app.use('/api/payments', paymentRoutes);
+
+// ============================================
+// FERRAMENTAS EXTRAS
+// ============================================
+import toolRoutes from './routes/tools.js';
+app.use('/api/tools', toolRoutes);
 
 // ============================================
 // SERVING FRONTEND (PRODUCTION)

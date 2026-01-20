@@ -16,7 +16,11 @@ router.post('/subscribe', async (req, res) => {
     try {
         const { userId, plan, customer } = req.body;
 
+        console.log(`[Payment] Received request: Plan=${plan}, UserID=${userId}`);
+        console.log(`[Payment] Customer:`, customer);
+
         if (!userId || !plan || !customer) {
+            console.error('[Payment] Missing fields:', { userId, plan, customerBody: !!customer });
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -26,6 +30,7 @@ router.post('/subscribe', async (req, res) => {
         else if (plan === 'pro_yearly') amount = 290.00; // 12 * 29 saving?
         else if (plan === 'business_monthly') amount = 99.00;
         else if (plan === 'business_yearly') amount = 990.00;
+        else if (plan === 'tester') amount = 5.00; // Test Plan
 
         if (amount === 0) {
             return res.status(400).json({ error: 'Invalid plan' });

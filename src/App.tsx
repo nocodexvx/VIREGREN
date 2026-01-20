@@ -19,6 +19,7 @@ import AIUsageLogs from "./pages/admin/AIUsageLogs";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SubscribePage from "./pages/Subscribe";
+import MetadataCleaner from "./pages/tools/MetadataCleaner";
 
 import Privacy from "./pages/legal/Privacy";
 import Terms from "./pages/legal/Terms";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/subscribe" element={<SubscribePage />} />
+            <Route path="/tools/metadata" element={<MetadataCleaner />} />
 
             {/* Legal Routes */}
             <Route path="/legal/privacy" element={<Privacy />} />

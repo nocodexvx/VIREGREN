@@ -9,9 +9,15 @@ const router = express.Router();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // SERVICE ROLE CLIENT (Required for Admin User Actions & Bypassing RLS)
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn("⚠️ WARNING: SUPABASE_SERVICE_ROLE_KEY is missing. Admin actions (create/delete users) may fail with '400 Bad Request'.");
+}
+
 const supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_KEY,
+    serviceRoleKey,
     {
         auth: {
             autoRefreshToken: false,
@@ -181,7 +187,7 @@ router.post('/users/:id/ban', requireAdmin, async (req, res) => {
         }
 
         // 2. Update DB Role/Status (Visual indicator)
-        const { error: dbError } = await supabase
+        const { error: dbError } = await supabaseAdmin
             .from('users')
             .update({ role: banned ? 'banned' : 'user' }) // Reset to user on unban
             .eq('id', id);
@@ -213,17 +219,213 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
         }
 
         // 2. Delete from Public Table (If cascade not set up, though usually it is. We do it to be safe)
-        const { error: dbError } = await supabase
+        // 1.5. FORCE DELETE Dependencies manually (In case Cascade is missing in DB)
+        // This prevents FK violation errors
+        await supabaseAdmin.from('subscriptions').delete().eq('user_id', id);
+        await supabaseAdmin.from('ai_usage_logs').delete().eq('user_id', id);
+        await supabaseAdmin.from('video_jobs').delete().eq('user_id', id);
+
+        // 2. Delete from Public Table (Use Admin client to bypass RLS)
+        const { error: dbError } = await supabaseAdmin
             .from('users')
             .delete()
             .eq('id', id);
 
         if (dbError) {
-            console.warn("DB Delete Warning (might have cascaded already):", dbError);
+            console.error("DB Delete Error:", dbError);
+            return res.status(500).json({ error: `Erro ao excluir do banco de dados: ${dbError.message} (Verifique constraints)` });
         }
 
         res.json({ message: 'Usuário excluído permanentemente.' });
 
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==========================================
+// 1. STATS & DASHBOARD
+// ==========================================
+router.get('/stats', requireAdmin, async (req, res) => {
+    try {
+        // Busca real de contagens
+        const { count: userCount } = await supabaseAdmin.from('users').select('*', { count: 'exact', head: true });
+
+        // Buscar assinaturas ativas
+        const { data: subs, error } = await supabaseAdmin.from('subscriptions').select('plan_id').eq('status', 'active');
+
+        console.log('[Stats Debug] Subs found:', subs?.length);
+        console.log('[Stats Debug] Subs Error:', error);
+        console.log('[Stats Debug] User Count:', userCount);
+
+        if (error) throw error;
+
+        // Calcular MRR real
+        const mrr = subs.reduce((total, sub) => {
+            let price = 0;
+            switch (sub.plan_id) {
+                case 'business_monthly': price = 99; break;
+                case 'business_yearly': price = 990 / 12; break; // Monthly equivalent
+                case 'pro_monthly': price = 29; break;
+                case 'pro_yearly': price = 290 / 12; break; // Monthly equivalent
+                case 'tester': price = 5; break;
+                default: price = 0;
+            }
+            return total + price;
+        }, 0);
+
+        res.json({
+            mrr,
+            activeSubscribers: subs.length,
+            totalUsers: userCount || 0,
+            churnRate: 0 // Mock por enquanto
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==========================================
+// 2. LOGS
+// ==========================================
+router.get('/logs', requireAdmin, async (req, res) => {
+    try {
+        const { data: logs, error } = await supabaseAdmin
+            .from('ai_usage_logs')
+            .select('*, users(email)')
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (error) throw error;
+        res.json({ logs: logs || [] });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==========================================
+// 3. SUBSCRIPTIONS MANAGEMENT
+// ==========================================
+router.get('/subscriptions', requireAdmin, async (req, res) => {
+    try {
+        const { data: subs, error } = await supabaseAdmin
+            .from('subscriptions')
+            .select('*, users(email, full_name, avatar_url)')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json({ subscriptions: subs || [] });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/subscriptions/:id/cancel', requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabaseAdmin
+            .from('subscriptions')
+            .update({ status: 'canceled', current_period_end: new Date() })
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: 'Assinatura cancelada com sucesso.' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/subscriptions/:id', requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabaseAdmin
+            .from('subscriptions')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: 'Assinatura removida com sucesso.' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==========================================
+// 4. SYSTEM CONFIG
+// ==========================================
+router.get('/config', requireAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabaseAdmin.from('system_config').select('*');
+
+        // Convert array to object key-value
+        const config = {};
+        if (data) {
+            data.forEach(item => {
+                config[item.key] = item.value;
+            });
+        }
+
+        res.json(config);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/config/status', requireAdmin, async (req, res) => {
+    // Testar conexão real
+    const { error } = await supabaseAdmin.from('users').select('id').limit(1);
+
+    // Verificar API Key do Google
+    const googleKey = process.env.GOOGLE_AI_API_KEY;
+
+    res.json({
+        googleAi: { // Changed to match frontend expectation (camelCase)
+            configured: !!googleKey
+        },
+        database: {
+            type: 'supabase (production)',
+            status: error ? 'error' : 'connected'
+        }
+    });
+});
+
+router.post('/config', requireAdmin, async (req, res) => {
+    try {
+        const { key, value } = req.body;
+
+        if (!key || !value) return res.status(400).json({ error: 'Key and Value required' });
+
+        const { error } = await supabaseAdmin
+            .from('system_config')
+            .upsert({ key, value, updated_at: new Date() });
+
+        if (error) throw error;
+        res.json({ message: 'Configuração salva.' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/admin/subscriptions/:id/refund
+router.post('/subscriptions/:id/refund', requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Mark as Refunded in DB (Revoke Access)
+        const { error } = await supabaseAdmin
+            .from('subscriptions')
+            .update({
+                status: 'refunded',
+                current_period_end: new Date() // Expire immediately
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // TODO: Call SyncPay Refund API here if docs available
+        // e.g., await syncPay.refund(stripe_customer_id)
+
+        res.json({ message: 'Assinatura marcada como reembolsada.' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

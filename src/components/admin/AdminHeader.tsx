@@ -27,7 +27,7 @@ export function AdminHeader({ collapsed }: AdminHeaderProps) {
         const fetchNotifications = async () => {
             try {
                 const data = await apiFetch('/api/admin/users');
-                const recent = data.users.slice(0, 5).map((u: any) => ({
+                const recent = (data?.users || []).slice(0, 5).map((u: any) => ({
                     id: u.id,
                     title: `Novo Usuário: ${u.full_name || u.email}`,
                     time: new Date(u.created_at).toLocaleDateString('pt-BR'),

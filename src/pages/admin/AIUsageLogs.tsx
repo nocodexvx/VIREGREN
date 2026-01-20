@@ -28,7 +28,7 @@ export default function AIUsageLogs() {
         setLoading(true);
         try {
             const data = await apiFetch('/api/admin/logs');
-            setLogs(data.logs);
+            setLogs(data?.logs || []);
         } catch (error) {
             console.error(error);
             toast.error("Erro ao carregar logs");
