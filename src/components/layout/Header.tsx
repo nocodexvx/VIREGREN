@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
+  // Force update v2.1
   const location = useLocation();
   const { user, signOut, isAdmin } = useAuth();
   const isLanding = location.pathname === "/";
